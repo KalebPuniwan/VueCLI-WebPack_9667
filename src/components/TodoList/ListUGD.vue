@@ -1,6 +1,6 @@
 <template>
  <v-main class="listUGD">
-   <h3 class="text-h3 font-weight-medium mb-5">To Do List</h3>
+   <h3 class="text-h3 font-weight-medium mb-5">To Do List UGD</h3>
 
    <v-card>
      <v-card-title>
@@ -12,12 +12,28 @@
          hide-details
        ></v-text-field>
        <v-spacer></v-spacer>
+       <v-select v-model="sort" label="Urutkan" outlined :items="['Penting','Tidak Penting']" hide-details></v-select>
+       <v-spacer></v-spacer>
        <v-btn color="success" dark @click="dialog = true">
          Tambah
        </v-btn>
      </v-card-title>
-     <v-data-table :headers="headers" :items="todos" :search="search">
-       <template v-slot:[`item.actions`]="{ item }">
+     <v-data-table :headers="headers" :items="todos" :search="search" :single = "search" :expanded.sync = "expanded" item-key = "note" show-expand class = "elevation-1">
+
+       <template v-slot:[`item.priority`]="{ item }">
+          <v-chip v-if="item.priority == 'Penting'" color="red" outlined>
+              {{ item.priority }}
+          </v-chip>
+          <v-chip v-else-if="item.priority == 'Biasa'" color="primary" outlined>
+              {{ item.priority }}
+          </v-chip>
+          <v-chip v-else color="success" outlined>
+              {{ item.priority }}
+          </v-chip>
+                
+      </template>
+                
+      <template v-slot:[`item.actions`]="{ item }">
          <v-btn small class="mr-2" @click="editItem(item)">
           edit
          </v-btn>
@@ -25,6 +41,17 @@
            delete
          </v-btn>
        </template>
+
+       <template v-slot:expanded-item="{ headers, item }">
+          <td :colspan="headers.length">
+            <br>
+            <h2 class="text-left"> Note : </h2>
+            <br>
+            <p class="text-left">{{ item.note }}</p>
+            <br>
+          </td>
+       </template>
+
      </v-data-table>
    </v-card>
 
@@ -70,7 +97,7 @@
    <v-dialog v-model="dialogEdit" persistent max-width="600px">
      <v-card>
        <v-card-title>
-         <span class="headline">Form Todo</span>
+         <span class="headline">Form Todo EDIT</span>
          </v-card-title>
        <v-card-text>
          <v-container>
@@ -116,13 +143,12 @@
          <v-btn color="blue darken-1" text @click="btnBatal">
            Tidak
          </v-btn>
-         <v-btn color="blue darken-1" text @click="btnHapus">
+         <v-btn color="red" text @click="btnHapus">
            Iya
          </v-btn>
        </v-card-actions>
      </v-card>
    </v-dialog>
-   
  </v-main>
 </template>
 <script>
@@ -130,6 +156,8 @@ export default {
  name: "List",
  data() {
      return {
+     expanded: [],
+     singleExpand: false,
      search: null,
      dialog: false,
      dialogHapus: false,
@@ -142,7 +170,6 @@ export default {
          value: "task",
        },
        { text: "Priority", value: "priority" },
-       { text: "Note", value: "note" },
        { text: "Actions", value: "actions" },
      ],
      todos: [
@@ -167,12 +194,6 @@ export default {
        priority: null,
        note: null,
      },
-
-     formTodoEdit: {
-       task: null,
-       priority: null,
-       note: null,
-     },
    };
  },
  methods: {
@@ -187,7 +208,10 @@ export default {
      this.dialogEdit=false;
    },
    edit(){
-     
+      this.save();
+      this.todos = this.todos.filter(todo => todo !== this.temp);
+      this.temp = null;
+      this.dialogEdit = false;
    },
    resetForm() {
      this.formTodo = {
@@ -203,10 +227,12 @@ export default {
         priority: item.priority,
         note: item.note,
        };
+       this.temp = item;
    },
 
    deleteItem(item){
      this.dialogHapus = true;
+     this.delete = this.todos.indexOf(item);
    },
 
    btnBatal(){
@@ -214,8 +240,8 @@ export default {
    },
 
    btnHapus(){
+     this.todos.splice(this.delete, 1);
      this.dialogHapus = false;
-     this.item.splice(item, 1)
    }
  },
 };
