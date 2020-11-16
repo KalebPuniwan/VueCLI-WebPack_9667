@@ -41,6 +41,9 @@
            delete
          </v-btn>
        </template>
+       <template v-slot:[`item.data`]="{ item }">
+            <v-checkbox multiple :key="item" @click.capture.stop="pilihData(item)"/>              
+       </template>
 
        <template v-slot:expanded-item="{ headers, item }">
           <td :colspan="headers.length">
@@ -54,6 +57,15 @@
 
      </v-data-table>
    </v-card>
+
+   <v-card v-if="Hapus.length" class="pa-5 mt-5">
+        <p>Delete Multiple : </p>
+            <ul v-for="del in Hapus" :key="del">
+                <li>{{ del.task }}</li>
+            </ul>
+            <br>
+        <v-btn color="red" dark class="mr-2" @click="hapusSemua">HAPUS SEMUA</v-btn>
+    </v-card>
 
    <v-dialog v-model="dialog" persistent max-width="600px">
      <v-card>
@@ -162,6 +174,7 @@ export default {
      dialog: false,
      dialogHapus: false,
      dialogEdit: false,
+     Hapus: [],
      headers: [
        {
          text: "Task",
@@ -171,6 +184,7 @@ export default {
        },
        { text: "Priority", value: "priority" },
        { text: "Actions", value: "actions" },
+       { text: "", value: "data" },
      ],
      todos: [
        {
@@ -242,7 +256,27 @@ export default {
    btnHapus(){
      this.todos.splice(this.delete, 1);
      this.dialogHapus = false;
-   }
+   },
+   
+   pilihData(item) {
+     this.Hapus.includes(item)  ?
+     this.Hapus.splice(this.Hapus.indexOf(item), 1) :
+     this.Hapus.push(item);                
+   },
+   
+   hapusSemua() {
+     for (var i=0; i < this.Hapus.length; i++) {
+        if (this.formTodo.task == this.Hapus[i].task) {
+            this.formTodo = {
+             task: null,
+             priority: null,
+             note: null,
+            };
+        }
+        this.todos.splice(this.todos.indexOf(this.Hapus[i]), 1);
+    }
+    this.Hapus = [];
+    },
  },
 };
 </script>
